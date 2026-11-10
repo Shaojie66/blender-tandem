@@ -1,0 +1,24 @@
+# Copy to ~/.config/blender-tandem/config.toml. Every setting is optional; the values shown are the defaults,
+# except where a line says otherwise.
+
+[local]
+blender = "/Applications/Blender.app/Contents/MacOS/Blender"
+
+[remote]
+host = "second-mac"            # no default: an ssh host or an alias from ~/.ssh/config. Without it, this Mac renders alone.
+blender = "/Applications/Blender.app/Contents/MacOS/Blender"
+dir = "tandem-jobs"            # job directories on the remote Mac, relative to its home
+interface = "bridge0"          # no default: the two Macs are joined by a Thunderbolt cable; connect over it
+                               # (to its link-local address) instead of over the network the host name resolves to
+# busy_file = "~/some/marker"  # an extra file kept on the remote while it renders, for other tools to check
+# before = "some command"      # run on the remote before each render, e.g. to free memory
+start_after = 30               # seconds this Mac renders alone before deciding whether the remote is worth starting
+min_job = 120                  # ... which it is when this Mac alone would still need longer than this
+sync = 10                      # seconds between exchanges of frames and cursors
+stall = 1800                   # reachable but no new frame for this long: the remote is dropped
+
+[yield]
+processes = ["Blender"]        # program names that this Mac gives way to while they render
+cpu = 50                       # percent of one core that counts as rendering
+quiet = 60                     # seconds of quiet before this Mac's worker comes back
+abort_frame = 20               # drop the frame in progress if it still needs longer than this; else finish it first

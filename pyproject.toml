@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blender-tandem"
+version = "0.1.0"
+description = "Render a Blender animation on two Macs at once: one from the first frame up, one from the last frame down, and the main Mac gives way to whatever else you render on it."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+tandem = "blender_tandem.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
