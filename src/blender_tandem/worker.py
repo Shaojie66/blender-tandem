@@ -35,7 +35,9 @@ def externals():
                 if d.filepath and d.filepath != "<builtin>" and getattr(d, "packed_file", None) is None]
     out += [l.filepath for l in bpy.data.libraries if getattr(l, "packed_file", None) is None]
     out += [c.filepath for c in bpy.data.cache_files if c.filepath]
-    return sorted({os.path.realpath(bpy.path.abspath(p)) for p in out})
+    # normpath, not realpath: Blender collapses ".." before it touches the disk, so behind a symlinked
+    # folder it can miss a file that realpath would find. Report what Blender itself will see.
+    return sorted({os.path.normpath(bpy.path.abspath(p)) for p in out})
 
 
 if mode == "snapshot":

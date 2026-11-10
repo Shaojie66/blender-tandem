@@ -189,6 +189,8 @@ The tool never deletes a job directory, on either Mac. Each holds a copy of the 
 
 Blender cannot pack every kind of external file into a `.blend`: Alembic and USD caches stay outside, and depending on the Blender version so do image sequences, movies or volumes. If anything is left outside after packing, the job renders on this Mac only and says which file was the reason.
 
+A file that Blender itself cannot find (a broken path) is a different case. It is missing on both Macs alike, so the job still uses both, and a warning names the file.
+
 ## Use from Python
 
 ```python

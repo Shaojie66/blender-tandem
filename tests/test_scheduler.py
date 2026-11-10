@@ -212,6 +212,23 @@ class Case(unittest.TestCase):
         self.assertEqual(missing(self.job, s.frames), [])
         self.assertEqual(read(os.path.join(self.job, "stop")), "")              # the local worker was not stopped
 
+    def test_remote_worker_dies_and_local_finishes(self):
+        local, remote = FakeLocal(self.job), FakeRemote(self.job)
+        s = self.sched(20, local, remote)
+
+        def crash(i):
+            if i == 3:
+                remote.on, remote.rc = False, 1
+        self.assertEqual(self.drive(s, [local, remote], each=crash), "done")
+        self.assertEqual(missing(self.job, s.frames), [])
+        self.assertEqual(remote.starts, 1)                                      # it is not started again
+        self.assertTrue(any("ended early" in l for l in self.logs))
+
+    def test_meeting_in_the_middle_is_not_reported_as_an_early_end(self):
+        local, remote = FakeLocal(self.job), FakeRemote(self.job)
+        self.assertEqual(self.drive(self.sched(40, local, remote), [local, remote]), "done")
+        self.assertFalse(any("ended early" in l for l in self.logs))
+
     def test_remote_only_reports_what_is_left(self):
         local, remote = FakeLocal(self.job), FakeRemote(self.job)
         s = self.sched(10, local, remote, mode="remote")
@@ -250,6 +267,17 @@ class Case(unittest.TestCase):
         self.assertEqual(self.drive(s, [local]), "done")
         self.assertEqual(local.rendered, [1, 2, 3, 4])
         self.assertGreaterEqual(self.now, 50)                                   # nothing happened while held
+
+    def test_a_long_wait_says_who_it_is_waiting_for(self):
+        local = FakeLocal(self.job)
+        s = self.sched(4, local, None, Script(["Blender pid 1 at 900% CPU", "Blender pid 1 at 700% CPU",
+                                               "Blender pid 2 at 600% CPU", "Blender pid 1 at 650% CPU"]))
+        self.assertEqual(self.drive(s, [local]), "done")
+        told = [l for l in self.logs if "gives way" in l or "still waiting" in l]
+        self.assertEqual(len(told), 2)                                          # once per program, not per reading
+        self.assertIn("Blender pid 1", told[0])
+        self.assertIn("still waiting", told[1])
+        self.assertIn("Blender pid 2", told[1])
 
 
 if __name__ == "__main__":

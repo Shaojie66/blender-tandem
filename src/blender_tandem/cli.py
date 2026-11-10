@@ -60,9 +60,12 @@ def render(blend, frames=None, percent=None, samples=None, job_root=None, name=N
     for f in job.STATE:
         job.write(os.path.join(jobdir, f), "")      # cursors and flags of an earlier run mean nothing now
 
+    if meta["missing"]:
+        log(f"warning: the scene points to {len(meta['missing'])} file(s) Blender cannot find, "
+            f"e.g. {meta['missing'][0]}; they will be missing in the frames too")
     remote, why = None, ""
     if mode != "local":
-        unpacked = meta["external"] + meta["missing"]
+        unpacked = meta["external"]                 # a missing file is missing on both machines alike
         if not cfg.remote_host:
             why = "no remote machine configured"
         elif unpacked:

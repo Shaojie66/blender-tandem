@@ -189,6 +189,8 @@ tandem --config other.toml render scene.blend
 
 不是所有外部文件 Blender 都能打包进 `.blend`：Alembic 和 USD 缓存打包不了，图片序列、视频、体积能不能打包取决于 Blender 版本。打包之后只要还有文件留在外面，这个作业就只在本机渲，并且会说明是哪个文件导致的。
 
+Blender 自己都找不到的文件（路径失效）是另一种情况。两台机器上同样缺这个文件，所以照常两台一起渲，同时打印警告指出是哪个文件。
+
 ## 在 Python 里调用
 
 ```python

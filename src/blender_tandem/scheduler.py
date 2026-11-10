@@ -40,6 +40,7 @@ class Scheduler:
         self.note = ""            # why frames were left unrendered, if they were
         self.offsets = {r: log_size(job, r) for r in ("local", "remote")}
         self.shown = None
+        self.held_by = set()
 
     def p(self, name):
         return os.path.join(self.job, name)
@@ -48,10 +49,17 @@ class Scheduler:
     def step(self):
         """Returns '' to keep going, 'done' when every frame is there, 'stuck' when nobody can go on."""
         now = self.clock()
-        if self.remote_live and not self.remote.running():
+        ended = self.remote_live and not self.remote.running()
+        if ended:
             self.remote.pull()            # the frames it finished after the last exchange
             self._remote_off()
         left = missing(self.job, self.todo)
+        if ended:
+            cur = read(self.p("local.cur"))
+            beyond = [f for f in left if not cur or f > int(cur)]   # more than the frame local is on
+            if beyond:                    # it did not get as far as the local cursor: it crashed or was killed
+                self.log(f"the remote worker ended early with {len(beyond)} frames left"
+                         + ("; this Mac renders them" if self.use_local else ""))
         if not left:
             return "done"
         if self.local_on and not self.local.running():   # it met the remote, gave way, or failed
@@ -63,6 +71,10 @@ class Scheduler:
                 self.log(self.note)
 
         hold = self.others.busy() if self.others and self.use_local else ""
+        who = hold.split(" at ")[0]                 # the program without its changing CPU figure
+        if hold and self.holding and who not in self.held_by:
+            self.log(f"local still waiting ({hold})")   # a long wait should say what it is waiting for
+        self.held_by = self.held_by | {who} if hold else set()   # each program is named once per wait
         if hold and not self.holding:
             self.holding = True
             write(self.p("local.hold"), hold)
