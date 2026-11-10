@@ -1,4 +1,6 @@
 """The small pure pieces: process sampling, frame ranges, config loading."""
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -6,7 +8,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 from blender_tandem import config                                    # noqa: E402
-from blender_tandem.job import parse_frames                          # noqa: E402
+from blender_tandem.job import parse_frames, snapshot                # noqa: E402
 from blender_tandem.others import Others, cpu_seconds                # noqa: E402
 from blender_tandem.remote import shell_path                         # noqa: E402
 
@@ -67,6 +69,62 @@ class OthersCase(unittest.TestCase):
         o.busy()
         self.at(10, (40, 40, "0:30.00", "/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/MacOS/DaVinci Resolve"))
         self.assertIn("DaVinci Resolve pid 40", o.busy())
+
+
+FAKE_BLENDER = """#!/bin/sh
+# Stands in for `Blender -b src ... -- snapshot out`: writes the snapshot and reports what $DIR/report says.
+DIR=$(dirname "$0")
+for last; do :; done
+echo x >> "$DIR/calls"
+cat "$DIR/report" 2>/dev/null
+echo '[tandem] SCENE {"frame_start": 1, "frame_end": 4, "frame_step": 1, "fps": 24.0, "engine": "CYCLES", "resolution": [8, 8, 100]}'
+echo blend > "$last"
+"""
+
+
+class SnapshotCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        d = self.tmp.name
+        self.blender, self.src = os.path.join(d, "blender"), os.path.join(d, "scene.blend")
+        with open(self.blender, "w") as fh:
+            fh.write(FAKE_BLENDER)
+        os.chmod(self.blender, 0o755)
+        with open(self.src, "w") as fh:
+            fh.write("a scene")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def freeze(self):
+        with contextlib.redirect_stdout(io.StringIO()):                 # the "freezing ..." line
+            return snapshot(self.blender, self.src, os.path.join(self.tmp.name, "jobs"), "scene", None, None)
+
+    def calls(self):
+        with open(os.path.join(self.tmp.name, "calls")) as fh:
+            return len(fh.read().split())
+
+    def test_a_clean_snapshot_is_reused(self):
+        job, meta = self.freeze()
+        self.assertEqual((meta["external"], meta["missing"], meta["scene"]["frame_end"]), ([], [], 4))
+        self.assertEqual(self.freeze()[0], job)
+        self.assertEqual(self.calls(), 1)
+
+    def test_a_snapshot_that_left_files_outside_is_made_again(self):
+        report = os.path.join(self.tmp.name, "report")
+        with open(report, "w") as fh:
+            fh.write("[tandem] MISSING /nowhere/font.ttf\n")
+        job, meta = self.freeze()
+        self.assertEqual(meta["missing"], ["/nowhere/font.ttf"])
+        os.remove(report)                                               # the path has been fixed
+        again, meta = self.freeze()
+        self.assertEqual((again, meta["missing"], self.calls()), (job, [], 2))
+
+    def test_a_changed_scene_gets_another_job(self):
+        job = self.freeze()[0]
+        with open(self.src, "w") as fh:
+            fh.write("another scene")
+        self.assertNotEqual(self.freeze()[0], job)
 
 
 class PartsCase(unittest.TestCase):

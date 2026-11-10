@@ -191,6 +191,8 @@ tandem --config other.toml render scene.blend
 
 Blender 自己都找不到的文件（路径失效）是另一种情况。两台机器上同样缺这个文件，所以照常两台一起渲，同时打印警告指出是哪个文件。
 
+这两种情况下，下次运行都会重新生成快照，所以把路径修好后重跑同一条命令即可。
+
 ## 在 Python 里调用
 
 ```python

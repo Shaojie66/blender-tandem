@@ -156,7 +156,14 @@ def snapshot(blender, src, root, name, percent, samples):
         scene, meta_path = os.path.join(job, "scene.blend"), os.path.join(job, "job.json")
         if os.path.exists(meta_path) and '"blender-tandem"' not in read(meta_path):
             raise SystemExit(f"{job} exists but was not made by blender-tandem; use another --name or --job-root")
-        if not (os.path.exists(scene) and os.path.exists(meta_path)):
+        frozen = os.path.exists(scene) and os.path.exists(meta_path)
+        if frozen:
+            try:    # a snapshot that left files outside is made again: the path may have been fixed since
+                old = json.loads(read(meta_path))
+                frozen = not (old.get("external") or old.get("missing"))
+            except ValueError:
+                frozen = False
+        if not frozen:
             os.makedirs(os.path.join(job, "frames"), exist_ok=True)
             tmp = os.path.join(job, ".scene_tmp.blend")
             log(f"freezing {src} -> {scene}")

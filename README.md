@@ -191,6 +191,8 @@ Blender cannot pack every kind of external file into a `.blend`: Alembic and USD
 
 A file that Blender itself cannot find (a broken path) is a different case. It is missing on both Macs alike, so the job still uses both, and a warning names the file.
 
+In both cases the snapshot is made again on the next run, so once the path is fixed the same command picks it up.
+
 ## Use from Python
 
 ```python
