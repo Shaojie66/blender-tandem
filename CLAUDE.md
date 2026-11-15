@@ -39,4 +39,5 @@ PYTHONPATH=src python3 -m blender_tandem status                 # 两台机器�
 
 ## 红线（用户全局规则）
 删除文件或 git 历史、`git push`、rebase、改仓库可见性、打 tag 发版、全局安装，先问用户。
-仓库目前是私有的，改公开由用户自己操作。
+仓库是公开的（2026-11-15 起），推上去的内容所有人都能看到，推送前确认没有真实主机名、用户名、家目录路径、IP、私人邮箱。
+本仓库的 git 邮箱设成了 GitHub 的 noreply 地址（`git config --local user.email`），不要改回全局的那个。
