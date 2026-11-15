@@ -73,9 +73,8 @@ for stale in glob.glob(os.path.join(fdir, f".tmp_{role}_*")):   # left by a run 
     os.remove(stale)
 sc = bpy.context.scene
 
-missing = [p for p in externals() if not os.path.exists(p)]
-if missing:
-    sys.exit(f"[tandem] {role} is missing files, not rendering: {missing}")
+# No check for files the scene cannot find: a broken path is broken on both machines alike, the snapshot
+# step already warned about it, and a scene with files that only one machine has never gets a remote.
 
 devices = "scene settings"
 if sc.render.engine == "CYCLES":
