@@ -4,6 +4,8 @@ English | [简体中文](README.zh-CN.md)
 
 Render a Blender animation on two Macs at once. Your main Mac renders from the first frame up, a second Mac renders from the last frame down, and they stop where they meet.
 
+![A recorded run, sped up: 96 frames, the main Mac filling the strip from frame 1 and the second Mac from frame 96 until they meet; the main Mac pauses while another render runs on it](demo/demo.svg)
+
 It is for one person with a main Mac and a spare one, for example a laptop on a Thunderbolt cable. There is no server and no shared disk, and nothing to install on the second Mac except Blender. While you render something else on the main Mac (a preview, another shot, a viewport), it steps aside and lets the second Mac carry on.
 
 It is not a render farm. It handles exactly two Macs, and does not run on Linux or Windows.

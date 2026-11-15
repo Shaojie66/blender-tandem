@@ -12,6 +12,8 @@
   - `worker.py` 在 Blender 里跑的那一半（`snapshot` / `render`）
 - `tests/`  标准库 `unittest`。`tests/make_scene.py` 生成测试用的小场景，不提交 `.blend`
 - `examples/`  配置样例
+- `demo/`  README 顶部的演示动画。`record.py` 让两台机器实跑一次并把时间线记进 `run.json`，`make_svg.py` 只负责把 `run.json` 画成 `demo.svg`。
+  动画里的数字和事件只能来自实跑记录，不手写、不修饰；`run.json` 里不留路径、主机名、IP。改了终端输出的格式要重录
 - 渲染产物、作业目录、`.blend` 一律不进 git（见 `.gitignore`）
 
 ## 代码约定
